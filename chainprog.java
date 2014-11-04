@@ -1,5 +1,3 @@
-import static java.lang.System.*;
-
 import java.io.*;
 import java.util.Scanner;
 
@@ -11,7 +9,6 @@ public class chainprog {
 		FileInputStream inputStreamone = null;
 		FileInputStream inputStreamtwo = null;
 		String file = "";
-		char ch = '\0';
 		
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter a file name: ");
@@ -21,6 +18,7 @@ public class chainprog {
 		} catch (IOException e){
 			System.out.println("The file doesn't exist! Here the error:");
 			System.out.print(e.getMessage());
+			scan.close();
 			return;
 		}
 		try{
@@ -28,21 +26,21 @@ public class chainprog {
 		} catch (IOException e){
 			System.out.println("The file doesn't exist! Here the error:");
 			System.out.print(e.getMessage());
+			inputStreamone.close();
+			scan.close();
 			return;
 		}
 
 		asciitable = poptable(asciitable, inputStreamone, inputStreamtwo);
 		asciitable = probtable(asciitable);
 		probword(asciitable);
-		printtable(asciitable);
+		//printtable(asciitable);
 		scan.close();
 	}
 
 	public static double[][] poptable(double[][] asciitable, FileInputStream inputStreamone, FileInputStream inputStreamtwo) throws IOException {
 		int r1 = 0;
 		int r2 = 0;
-		int s1 = 0;
-		int s2 = 0;
 		r1 = inputStreamtwo.read();
 		for(;;){
 			if ((r1 = inputStreamone.read()) == -1)
@@ -54,8 +52,6 @@ public class chainprog {
 				break;
 			}
 			
-			s1 = (int)(char)r1;
-			s2 = (int)(char)r2;
 			asciitable[r1][r2]++;
 			//System.out.println((char)s1+" "+(char)s2);
 		}
