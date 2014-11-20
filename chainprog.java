@@ -109,7 +109,7 @@ public class chainprog {
 		double probability;
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter an encrypted text to decrypt: ");
-		encryptstring = scan.next();
+		encryptstring = scan.nextLine();
 		decrypttext(encryptstring, asciitable);
 		scan.close();
 	}
