@@ -110,6 +110,7 @@ public class chainprog {
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter an encrypted text to decrypt: ");
 		encryptstring = scan.nextLine();
+        //encryptstring = encodestring(encryptstring);
 		decrypttext(encryptstring, asciitable);
 		scan.close();
 	}
@@ -121,10 +122,12 @@ public class chainprog {
 		int rand1 = 0;
 		int rand2 = 0;
 		int temp = 0;
+        int numberofswaps = 0;
 		double prob = 0;
 		double probnew = 0;
 		String oldstring = estring;
 		String newstring = estring;
+        String staticstring = estring;
 		String response = "";
 		int[] matchfunction = new int[128];
 		int[] newmatchfunction;
@@ -141,7 +144,10 @@ public class chainprog {
 		while (cont == 0)
 		{
 			rand1 = spitrandom();
-			rand2 = spitrandom();
+            do
+            {
+			    rand2 = spitrandom();
+            } while (rand1 == rand2);
 			temp = newmatchfunction[rand1];
 			newmatchfunction[rand1] = newmatchfunction[rand2];
 			newmatchfunction[rand2] = temp;
@@ -149,44 +155,47 @@ public class chainprog {
 			newstring = convertstring(newstring, newmatchfunction);
 			probnew = calculateprob(newstring, asciitable);
 
-			if (prob > probnew)
+			if ((prob > probnew) || ((-1*Math.log(Math.random())) < (probnew - prob)))
 			{
 				prob = probnew;
 				oldstring = newstring;
 				matchfunction = newmatchfunction.clone();
+                numberofswaps++;
 			}
 			else 
 			{
 				//Condition for not switching
-				if (spitrandom() > 64)
-				{
-					newstring = oldstring;
-					newmatchfunction = matchfunction.clone();
-				}
+				//if (Math.log(Math.random()) > (probnew - prob))
+				//if (Math.log(Math.random()) < (probnew - prob))
+				//{
+				//	prob = probnew;
+				//	oldstring = newstring;
+				//	matchfunction = newmatchfunction.clone();
+                //    numberofswaps++;
+				//}
 				//Condition for switching
-				else
-				{
-					prob = probnew;
-					oldstring = newstring;
-					matchfunction = newmatchfunction.clone();
-				}
+				//else
+				//{
+					newmatchfunction = matchfunction.clone();
+				//}
 			}
+            newstring = staticstring;
 			iter++;
-			if (iter % 100 == 0)
-			{
-				System.out.println(oldstring);
-			}
 			if (iter % 1000 == 0)
 			{
-				System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+"): ");
-				response = scan.next();
-				response.toLowerCase();
-				if (response.equals("no"))
-				{
-					//break out of the while loop + exit decryption
-					cont = 1;
-				}
+				System.out.println(iter+". "+oldstring+" "+prob+" #ofSwaps: "+numberofswaps);
 			}
+			//if (iter % 100 == 0)
+			//{
+			//	System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+") (# of swaps: "+numberofswaps+"): ");
+			//	response = scan.next();
+			//	response.toLowerCase();
+			//	if (response.equals("no"))
+			//	{
+			//		//break out of the while loop + exit decryption
+			//		cont = 1;
+			//	}
+			//}
 		}
 		scan.close();
 		System.out.println("The decryption process has ended.");
@@ -258,4 +267,14 @@ public class chainprog {
 		}
 		return matchfunction;
 	}
+
+    public static String encodestring(String estring)
+    {
+        String temp = "";
+        for (int i = 0; i < estring.length(); i++) {
+            temp += (char)(estring.charAt(i)+1);
+        }
+        System.out.println("Ecyrpted String: "+temp);
+        return temp;
+    }
 }
