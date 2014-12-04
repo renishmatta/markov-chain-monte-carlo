@@ -3,6 +3,9 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class chainprog {
+    static int factor = 1000;
+    static int printiter = 1 * factor;
+    static int askiter = 10 * factor;
 
 	public static void main(String[] args) throws IOException{
 		// TODO Auto-generated method stub
@@ -46,7 +49,7 @@ public class chainprog {
 	public static double[][] poptable(double[][] asciitable, FileInputStream inputStreamone, FileInputStream inputStreamtwo) throws IOException {
 		int r1 = 0;
 		int r2 = 0;
-		r1 = inputStreamtwo.read();
+		r2 = inputStreamtwo.read();
 		for(;;){
 			if ((r1 = inputStreamone.read()) == -1)
 			{
@@ -110,7 +113,7 @@ public class chainprog {
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter an encrypted text to decrypt: ");
 		encryptstring = scan.nextLine();
-        //encryptstring = encodestring(encryptstring);
+        encryptstring = encodestring(encryptstring);
 		decrypttext(encryptstring, asciitable);
 		scan.close();
 	}
@@ -143,24 +146,31 @@ public class chainprog {
 		//Iteration
 		while (cont == 0)
 		{
-			rand1 = spitrandom();
+            do
+            {
+			    rand1 = spitrandom();
+            } while ((rand1 < 32) || (rand1 > 126));
             do
             {
 			    rand2 = spitrandom();
-            } while (rand1 == rand2);
+            } while ((rand1 == rand2) || (rand2 < 32 || rand2 > 126));
 			temp = newmatchfunction[rand1];
 			newmatchfunction[rand1] = newmatchfunction[rand2];
 			newmatchfunction[rand2] = temp;
 			
-			newstring = convertstring(newstring, newmatchfunction);
+            //TODO: check if this is correct
+			newstring = convertstring(estring, newmatchfunction);
 			probnew = calculateprob(newstring, asciitable);
 
-			if ((prob > probnew) || ((-1*Math.log(Math.random())) < (probnew - prob)))
+            //TODO: Check which is needed here: > or <
+			//if ((prob > probnew) || ((-1*Math.log(Math.random())) < (probnew - prob)))
+			if ((prob > probnew) || ((-1*Math.log(Math.random())) > (probnew - prob)))
 			{
 				prob = probnew;
 				oldstring = newstring;
 				matchfunction = newmatchfunction.clone();
                 numberofswaps++;
+                //System.out.print("rand1: "+rand1+" rand2: "+rand2+"\n");
 			}
 			else 
 			{
@@ -181,21 +191,21 @@ public class chainprog {
 			}
             newstring = staticstring;
 			iter++;
-			if (iter % 1000 == 0)
+			if (iter % printiter == 0)
 			{
 				System.out.println(iter+". "+oldstring+" "+prob+" #ofSwaps: "+numberofswaps);
 			}
-			//if (iter % 100 == 0)
-			//{
-			//	System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+") (# of swaps: "+numberofswaps+"): ");
-			//	response = scan.next();
-			//	response.toLowerCase();
-			//	if (response.equals("no"))
-			//	{
-			//		//break out of the while loop + exit decryption
-			//		cont = 1;
-			//	}
-			//}
+			if (iter % askiter == 0)
+			{
+				System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+") (# of swaps: "+numberofswaps+"): ");
+				response = scan.next();
+				response.toLowerCase();
+				if (response.equals("no"))
+				{
+					//break out of the while loop + exit decryption
+					cont = 1;
+				}
+			}
 		}
 		scan.close();
 		System.out.println("The decryption process has ended.");
