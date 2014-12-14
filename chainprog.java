@@ -5,9 +5,12 @@ import java.util.Scanner;
 public class chainprog {
     static int printiter = 10000;
     static int askiter = 200000;
-    //0 == encrypt, 1 == don't encrypt
-    static int cencrypt = 1;
 
+    /*  Main: Initialize the table of probabilities, open file input streams
+     *  and call the functions to populate the probabilities table and
+     *  calculate probabilities.
+     *  Once the initialization stage is over, we call our decryption function.
+     *  */
 	public static void main(String[] args) throws IOException{
 		// TODO Auto-generated method stub
 		double[][] asciitable = new double[128][128];
@@ -41,12 +44,12 @@ public class chainprog {
 		asciitable = poptable(asciitable, inputStreamone, inputStreamtwo);
 		asciitable = probtable(asciitable);
 		
-		//probword(asciitable);
 		decrypter(asciitable);
-		//printtable(asciitable);
 		scan.close();
 	}
 
+    /*  Poptable:  Reads through the input file and populates table with
+     *  appropriate occurences.*/
 	public static double[][] poptable(double[][] asciitable, FileInputStream inputStreamone, FileInputStream inputStreamtwo) throws IOException {
 		int r1 = 0;
 		int r2 = 0;
@@ -62,11 +65,12 @@ public class chainprog {
 			}
 			
 			asciitable[r1][r2]++;
-			//System.out.println((char)s1+" "+(char)s2);
 		}
 		return asciitable;
 	}
 	
+    /*  Probtable:  Calculates the probabilities for each cell in the
+     *  probabilities table */
 	public static double[][] probtable(double[][] asciitable)
 	{
 		int[] total = new int[128];
@@ -95,18 +99,10 @@ public class chainprog {
 		return asciitable;
 	}
 	
-	public static void probword(double[][] asciitable)
-	{
-		String word = "";
-		double probability;
-		Scanner scan = new Scanner(System.in);
-		System.out.print("Enter a word: ");
-		word = scan.next();
-		scan.close();
-		probability = calculateprob(word, asciitable);
-		System.out.println("The probability that the word is in the text is: "+probability);
-	}
-	
+    /*  Decrypter:  Main decryption function.  Asks user for an encrypted
+     *  string -> passes the encrypted string and probabilities table to the
+     *  decrypttext function to decrypt.  Decrypter will call decrypttext until
+     *  the user tells it to stop */
 	public static void decrypter(double[][] asciitable)
 	{
 		String encryptstring = "";
@@ -114,10 +110,6 @@ public class chainprog {
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter an encrypted text to decrypt: ");
 		encryptstring = scan.nextLine();
-        if (cencrypt == 0)
-        {
-            encryptstring = encodestring(encryptstring);
-        }
 		//scan.close();
         Scanner scan2 = new Scanner(System.in);
         while(true)
@@ -133,13 +125,12 @@ public class chainprog {
         //scan2.close();
 	}
 	
+    /*  decrypttext:  Decryttext decrypted the provded encrypted string using
+     *  the Metropolis Random Walk. */
 	public static void decrypttext(String estring, double[][] asciitable)
 	{
 		int iter = 0;
 		int cont = 0;
-		int rand1 = 0;
-		int rand2 = 0;
-		int temp = 0;
         int numberofswaps = 0;
 		double prob = 0;
 		double probnew = 0;
@@ -151,65 +142,39 @@ public class chainprog {
 		int[] newmatchfunction;
 		Scanner scan = new Scanner(System.in);
 		
+		//Initialization
 		matchfunction = initializefunction(matchfunction);
 		newmatchfunction = matchfunction.clone();
-		
-		//Initialization
 		oldstring = convertstring(oldstring, matchfunction);
 		prob = calculateprob(oldstring,asciitable);
 		
 		//Iteration
 		while (cont == 0)
 		{
-            do
-            {
-			    rand1 = spitrandom();
-            } while ((rand1 < 32) || (rand1 > 126));
-            do
-            {
-			    rand2 = spitrandom();
-            } while ((rand1 == rand2) || (rand2 < 32 || rand2 > 126));
-			temp = newmatchfunction[rand1];
-			newmatchfunction[rand1] = newmatchfunction[rand2];
-			newmatchfunction[rand2] = temp;
-			
-            //TODO: check if this is correct
+            swap(newmatchfunction);
 			newstring = convertstring(estring, newmatchfunction);
 			probnew = calculateprob(newstring, asciitable);
 
-            //TODO: Check which is needed here: > or <
-			//if ((prob > probnew) || ((-1*Math.log(Math.random())) < (probnew - prob)))
 			if ((prob > probnew) || ((-1*Math.log(Math.random())) > (probnew - prob)))
 			{
 				prob = probnew;
 				oldstring = newstring;
 				matchfunction = newmatchfunction.clone();
                 numberofswaps++;
-                //System.out.print("rand1: "+rand1+" rand2: "+rand2+"\n");
 			}
 			else 
 			{
-				//Condition for not switching
-				//if (Math.log(Math.random()) > (probnew - prob))
-				//if (Math.log(Math.random()) < (probnew - prob))
-				//{
-				//	prob = probnew;
-				//	oldstring = newstring;
-				//	matchfunction = newmatchfunction.clone();
-                //    numberofswaps++;
-				//}
-				//Condition for switching
-				//else
-				//{
-					newmatchfunction = matchfunction.clone();
-				//}
+				newmatchfunction = matchfunction.clone();
 			}
             newstring = staticstring;
 			iter++;
+
 			if (iter % printiter == 0)
 			{
 				System.out.println(iter+". "+oldstring+" "+prob+" #ofSwaps: "+numberofswaps);
 			}
+            // Ask the user if they want to continue decrypting the provided
+            // string
 			if (iter % askiter == 0)
 			{
 				System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+") (# of swaps: "+numberofswaps+"): ");
@@ -226,6 +191,8 @@ public class chainprog {
 		System.out.println("The decryption process has ended.");
 	}
 	
+    /*  Calculateprob:  Calcuates probability of a string occuring using the
+     *  probabilites table(asciitable) */
 	public static double calculateprob(String word, double[][] asciitable)
 	{
 		if (word.length() < 2)
@@ -238,30 +205,31 @@ public class chainprog {
 		{
 			char indexone = word.charAt(index);
 			char indextwo = word.charAt(index+1);
-			//probability += asciitable[indexone][indextwo];
-            //TODO: Check if you have to cast to an int
 			probability += asciitable[(int)indexone][(int)indextwo];
 		}
 		return probability;
 	}
 	
+    /*  Spitrandom:  Generates round integer between 0 and 127(inclusive) */
 	public static int spitrandom()
 	{
 		Random rand = new Random();
 		return rand.nextInt(128-0) + 0;		
 	}
 	
+    /*  Convertstring:  Converts the given string using the matchfunction
+     *  provided */
 	public static String convertstring(String estring, int[] matchfunction)
 	{
 		String cstring = "";
 		for (int index = 0; index < estring.length(); index++)
 		{
-			//cstring += (char)matchfunction[estring.charAt(index)];
 			cstring += (char)matchfunction[(int)estring.charAt(index)];
 		}
 		return cstring;
 	}
 	
+    /*  Printtable:  Prints the probabilities table out */
 	public static void printtable(double[][] asciitable)
 	{
 		for (int i = 0; i < asciitable.length; i++)
@@ -275,6 +243,8 @@ public class chainprog {
 		}
 	}
 	
+    /*  Initializetable:  Populates each cell of the probabilities table with 1
+     *  */
 	public static double[][] initializetable(double[][] asciitable)
 	{
 		for (int indexone = 0; indexone < asciitable.length; indexone++)
@@ -287,6 +257,8 @@ public class chainprog {
 		return asciitable;
 	}
 	
+    /*  Initializefunction:  Initializes the mapping function.  Randomizes
+     *  mappings inside the mapping function */
 	public static int[] initializefunction(int[] matchfunction)
 	{
 		for (int index = 0; index < matchfunction.length; index++)
@@ -300,6 +272,7 @@ public class chainprog {
 		return matchfunction;
 	}
 
+    /*  Swap:  Swaps two random mappings in a mapping function */
     public static void swap(int[] matchfunction)
     {
         int rand1 = 0;
@@ -317,15 +290,5 @@ public class chainprog {
 		matchfunction[rand1] = matchfunction[rand2];
 		matchfunction[rand2] = temp;
 
-    }
-
-    public static String encodestring(String estring)
-    {
-        String temp = "";
-        for (int i = 0; i < estring.length(); i++) {
-            temp += (char)(estring.charAt(i)+1);
-        }
-        System.out.println("Ecyrpted String: "+temp);
-        return temp;
     }
 }
