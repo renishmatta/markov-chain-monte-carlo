@@ -3,9 +3,10 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class chainprog {
-    static int factor = 1000;
-    static int printiter = 1 * factor;
-    static int askiter = 10 * factor;
+    static int printiter = 10000;
+    static int askiter = 200000;
+    //0 == encrypt, 1 == don't encrypt
+    static int cencrypt = 1;
 
 	public static void main(String[] args) throws IOException{
 		// TODO Auto-generated method stub
@@ -20,7 +21,7 @@ public class chainprog {
 		System.out.print("Enter a file name: ");
 		file = scan.next();
 		try{
-		inputStreamone = new FileInputStream(file);
+		    inputStreamone = new FileInputStream(file);
 		} catch (IOException e){
 			System.out.println("The file doesn't exist! Here the error:");
 			System.out.print(e.getMessage());
@@ -101,9 +102,9 @@ public class chainprog {
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter a word: ");
 		word = scan.next();
+		scan.close();
 		probability = calculateprob(word, asciitable);
 		System.out.println("The probability that the word is in the text is: "+probability);
-		scan.close();
 	}
 	
 	public static void decrypter(double[][] asciitable)
@@ -113,9 +114,23 @@ public class chainprog {
 		Scanner scan = new Scanner(System.in);
 		System.out.print("Enter an encrypted text to decrypt: ");
 		encryptstring = scan.nextLine();
-        encryptstring = encodestring(encryptstring);
-		decrypttext(encryptstring, asciitable);
-		scan.close();
+        if (cencrypt == 0)
+        {
+            encryptstring = encodestring(encryptstring);
+        }
+		//scan.close();
+        Scanner scan2 = new Scanner(System.in);
+        while(true)
+        {
+	        decrypttext(encryptstring, asciitable);
+            System.out.print("Do you want to try again?: ");
+            String answer = scan2.nextLine();
+            if (answer.equals("no"))
+            {
+                break;
+            }
+        }
+        //scan2.close();
 	}
 	
 	public static void decrypttext(String estring, double[][] asciitable)
@@ -198,7 +213,7 @@ public class chainprog {
 			if (iter % askiter == 0)
 			{
 				System.out.print("Do you want to continue decrypting? (Current Prob: "+prob+") (# of swaps: "+numberofswaps+"): ");
-				response = scan.next();
+				response = scan.nextLine();
 				response.toLowerCase();
 				if (response.equals("no"))
 				{
@@ -207,7 +222,7 @@ public class chainprog {
 				}
 			}
 		}
-		scan.close();
+		//scan.close();
 		System.out.println("The decryption process has ended.");
 	}
 	
@@ -223,7 +238,9 @@ public class chainprog {
 		{
 			char indexone = word.charAt(index);
 			char indextwo = word.charAt(index+1);
-			probability += asciitable[indexone][indextwo];
+			//probability += asciitable[indexone][indextwo];
+            //TODO: Check if you have to cast to an int
+			probability += asciitable[(int)indexone][(int)indextwo];
 		}
 		return probability;
 	}
@@ -239,7 +256,8 @@ public class chainprog {
 		String cstring = "";
 		for (int index = 0; index < estring.length(); index++)
 		{
-			cstring += (char)matchfunction[estring.charAt(index)];
+			//cstring += (char)matchfunction[estring.charAt(index)];
+			cstring += (char)matchfunction[(int)estring.charAt(index)];
 		}
 		return cstring;
 	}
@@ -275,8 +293,31 @@ public class chainprog {
 		{
 			matchfunction[index] = index;
 		}
+        for (int i = 0; i < 100; i++)
+        {
+            swap(matchfunction);
+        }
 		return matchfunction;
 	}
+
+    public static void swap(int[] matchfunction)
+    {
+        int rand1 = 0;
+        int rand2 = 0;
+        int temp = 0;
+        do
+        {
+		    rand1 = spitrandom();
+        } while ((rand1 < 32) || (rand1 > 126));
+        do
+        {
+		    rand2 = spitrandom();
+        } while ((rand1 == rand2) || (rand2 < 32 || rand2 > 126));
+		temp = matchfunction[rand1];
+		matchfunction[rand1] = matchfunction[rand2];
+		matchfunction[rand2] = temp;
+
+    }
 
     public static String encodestring(String estring)
     {
